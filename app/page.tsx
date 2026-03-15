@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { Navbar } from '@/components/navbar';
 import { HeroBanner } from '@/components/hero-banner';
 import { MovieRow } from '@/components/movie-row';
@@ -92,76 +93,110 @@ export default async function HomePage() {
         <>
           <HeroBanner movies={trending.results.slice(0, 5)} />
           
-          <div className="-mt-32 relative z-10 space-y-2">
-            <MovieRow 
-              title="Trending Now" 
-              movies={trending.results} 
-              showRank 
-            />
-            <MovieRow 
-              title="Popular Movies" 
-              movies={popular.results} 
-            />
-            <MovieRow 
-              title="Now Playing" 
-              movies={nowPlaying.results} 
-            />
-            <MovieRow 
-              title="Action Movies" 
-              movies={actionMovies.results} 
-            />
-            <MovieRow 
-              title="Comedy" 
-              movies={comedyMovies.results} 
-            />
-            <MovieRow 
-              title="Horror" 
-              movies={horrorMovies.results} 
-            />
-            <MovieRow 
-              title="Popular TV Shows" 
-              movies={popularTV.results} 
-            />
-            <MovieRow 
-              title="Sci-Fi" 
-              movies={sciFiMovies.results} 
-            />
-            <MovieRow 
-              title="Thriller" 
-              movies={thrillerMovies.results} 
-            />
-            <MovieRow 
-              title="Top Rated Movies" 
-              movies={topRated.results} 
-            />
-            <MovieRow 
-              title="Romance" 
-              movies={romanceMovies.results} 
-            />
-            <MovieRow 
-              title="Crime TV" 
-              movies={crimeTV.results} 
-            />
-            <MovieRow 
-              title="Animation" 
-              movies={animationMovies.results} 
-            />
-            <MovieRow 
-              title="Drama TV" 
-              movies={dramaTV.results} 
-            />
-            <MovieRow 
-              title="Coming Soon" 
-              movies={upcoming.results} 
-            />
-            <MovieRow 
-              title="Top Rated TV Shows" 
-              movies={topRatedTV.results} 
-            />
-            <MovieRow 
-              title="Documentaries" 
-              movies={documentaries.results} 
-            />
+          <div className="-mt-16 sm:-mt-24 md:-mt-32 relative z-10 space-y-0 md:space-y-1">
+            <Suspense fallback={<div className="h-48 animate-pulse bg-muted/20" />}>
+              <MovieRow 
+                title="Trending Now" 
+                movies={trending.results} 
+                showRank 
+              />
+            </Suspense>
+            <Suspense fallback={<div className="h-48 animate-pulse bg-muted/20" />}>
+              <MovieRow 
+                title="Popular Movies" 
+                movies={popular.results} 
+              />
+            </Suspense>
+            <Suspense fallback={<div className="h-48 animate-pulse bg-muted/20" />}>
+              <MovieRow 
+                title="Now Playing" 
+                movies={nowPlaying.results} 
+              />
+            </Suspense>
+            <Suspense fallback={<div className="h-48 animate-pulse bg-muted/20" />}>
+              <MovieRow 
+                title="Action Movies" 
+                movies={actionMovies.results} 
+              />
+            </Suspense>
+            <Suspense fallback={<div className="h-48 animate-pulse bg-muted/20" />}>
+              <MovieRow 
+                title="Comedy" 
+                movies={comedyMovies.results} 
+              />
+            </Suspense>
+            <Suspense fallback={<div className="h-48 animate-pulse bg-muted/20" />}>
+              <MovieRow 
+                title="Horror" 
+                movies={horrorMovies.results} 
+              />
+            </Suspense>
+            <Suspense fallback={<div className="h-48 animate-pulse bg-muted/20" />}>
+              <MovieRow 
+                title="Popular TV Shows" 
+                movies={popularTV.results} 
+              />
+            </Suspense>
+            <Suspense fallback={<div className="h-48 animate-pulse bg-muted/20" />}>
+              <MovieRow 
+                title="Sci-Fi" 
+                movies={sciFiMovies.results} 
+              />
+            </Suspense>
+            <Suspense fallback={<div className="h-48 animate-pulse bg-muted/20" />}>
+              <MovieRow 
+                title="Thriller" 
+                movies={thrillerMovies.results} 
+              />
+            </Suspense>
+            <Suspense fallback={<div className="h-48 animate-pulse bg-muted/20" />}>
+              <MovieRow 
+                title="Top Rated Movies" 
+                movies={topRated.results} 
+              />
+            </Suspense>
+            <Suspense fallback={<div className="h-48 animate-pulse bg-muted/20" />}>
+              <MovieRow 
+                title="Romance" 
+                movies={romanceMovies.results} 
+              />
+            </Suspense>
+            <Suspense fallback={<div className="h-48 animate-pulse bg-muted/20" />}>
+              <MovieRow 
+                title="Crime TV" 
+                movies={crimeTV.results} 
+              />
+            </Suspense>
+            <Suspense fallback={<div className="h-48 animate-pulse bg-muted/20" />}>
+              <MovieRow 
+                title="Animation" 
+                movies={animationMovies.results} 
+              />
+            </Suspense>
+            <Suspense fallback={<div className="h-48 animate-pulse bg-muted/20" />}>
+              <MovieRow 
+                title="Drama TV" 
+                movies={dramaTV.results} 
+              />
+            </Suspense>
+            <Suspense fallback={<div className="h-48 animate-pulse bg-muted/20" />}>
+              <MovieRow 
+                title="Coming Soon" 
+                movies={upcoming.results} 
+              />
+            </Suspense>
+            <Suspense fallback={<div className="h-48 animate-pulse bg-muted/20" />}>
+              <MovieRow 
+                title="Top Rated TV Shows" 
+                movies={topRatedTV.results} 
+              />
+            </Suspense>
+            <Suspense fallback={<div className="h-48 animate-pulse bg-muted/20" />}>
+              <MovieRow 
+                title="Documentaries" 
+                movies={documentaries.results} 
+              />
+            </Suspense>
           </div>
         </>
       )}

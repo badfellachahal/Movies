@@ -141,28 +141,34 @@ export function VideoPlayer({
 
   }, [imdbId]);
 
-  // Block popup windows from streaming servers
+  // Block popup windows and 3rd party redirects from streaming servers
   useEffect(() => {
     const originalOpen = window.open;
     
-    // Override window.open to block popups from ads
-    window.open = function(...args) {
-      // Check if this is likely an ad popup (no url or suspicious patterns)
-      const url = args[0];
-      if (!url || 
-          url === 'about:blank' || 
-          url.includes('popup') || 
-          url.includes('ad') ||
-          url.includes('click') ||
-          url.includes('track')) {
-        return null;
-      }
-      return originalOpen.apply(window, args);
+    // Override window.open to block ALL popups from streaming sites
+    window.open = function() {
+      return null;
     };
 
-    // Cleanup
+    // Block click events that try to open new windows
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const anchor = target.closest('a');
+      if (anchor) {
+        const href = anchor.getAttribute('href');
+        const targetAttr = anchor.getAttribute('target');
+        if (targetAttr === '_blank' || (href && (href.startsWith('http') && !href.includes(window.location.host)))) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }
+    };
+
+    document.addEventListener('click', handleClick, true);
+
     return () => {
       window.open = originalOpen;
+      document.removeEventListener('click', handleClick, true);
     };
   }, []);
 
@@ -461,7 +467,7 @@ export function VideoPlayer({
     >
       {/* Netflix-style Top Gradient Header */}
       <div 
-        className={`absolute top-0 left-0 right-0 z-20 transition-all duration-500 ${
+        className={`absolute top-0 left-0 right-0 z-[35] transition-all duration-500 ${
           controlsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'
         }`}
       >
@@ -760,7 +766,7 @@ export function VideoPlayer({
 
       {/* Netflix-style Bottom Controls Bar */}
       <div 
-        className={`absolute bottom-0 left-0 right-0 z-20 transition-all duration-500 ${
+        className={`absolute bottom-0 left-0 right-0 z-[35] transition-all duration-500 ${
           controlsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-full pointer-events-none'
         }`}
       >
@@ -948,7 +954,7 @@ export function VideoPlayer({
 
       {/* Netflix-style Loading Overlay */}
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-10">
+        <div className="absolute inset-0 flex items-center justify-center bg-black/90 z-[25]">
           <div className="flex flex-col items-center gap-6 max-w-sm text-center px-6">
             {/* Netflix-style spinner */}
             <div className="relative">
@@ -995,30 +1001,35 @@ export function VideoPlayer({
 
       {/* Video iframe container */}
       <div className="relative w-full h-full">
-        {/* Transparent overlay to capture mouse events when controls are hidden */}
-        {!controlsVisible && (
-          <div 
-            className="absolute inset-0 z-10"
-            onMouseMove={showControls}
-            onTouchStart={showControls}
-            onClick={(e) => {
-              showControls();
-              // Allow click through after showing controls
+        {/* Interaction overlay - shows controls on tap/move, blocks first tap ads */}
+        <div 
+          className={`absolute inset-0 z-[10] ${
+            controlsVisible ? 'pointer-events-none' : 'pointer-events-auto'
+          }`}
+          onMouseMove={showControls}
+          onTouchStart={(e) => {
+            e.preventDefault();
+            showControls();
+          }}
+          onClick={(e) => {
+            if (!controlsVisible) {
+              e.preventDefault();
               e.stopPropagation();
-            }}
-          />
-        )}
+            }
+            showControls();
+          }}
+        />
         
-        {/* Video iframe - no sandbox to allow streaming servers to work */}
+        {/* Video iframe */}
         <iframe
           ref={iframeRef}
           src={embedUrl}
           className="w-full h-full"
           allowFullScreen
           allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
+          referrerPolicy="no-referrer"
           onLoad={handleIframeLoad}
           onError={() => {
-            // If current server fails, try next one
             if (isAutoFetching) {
               tryNextServer();
             }
