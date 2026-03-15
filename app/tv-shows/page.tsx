@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
 import { MovieRow } from '@/components/movie-row';
@@ -76,15 +77,33 @@ export default async function TVShowsPage() {
           </div>
         ) : (
           <div className="space-y-0 md:space-y-1">
-            <MovieRow title="Trending TV Shows" movies={trendingTV.results} showRank />
-            <MovieRow title="Airing Today" movies={airingToday.results} />
-            <MovieRow title="Popular TV Shows" movies={popular.results} />
-            <MovieRow title="Currently On Air" movies={onTheAir.results} />
-            <MovieRow title="Top Rated TV Shows" movies={topRated.results} />
-            <MovieRow title="Drama" movies={drama.results} />
-            <MovieRow title="Comedy" movies={comedy.results} />
-            <MovieRow title="Sci-Fi & Fantasy" movies={sciFiFantasy.results} />
-            <MovieRow title="Crime" movies={crime.results} />
+            <Suspense fallback={<div className="h-48 animate-pulse bg-muted/20" />}>
+              <MovieRow title="Trending TV Shows" movies={trendingTV.results} showRank />
+            </Suspense>
+            <Suspense fallback={<div className="h-48 animate-pulse bg-muted/20" />}>
+              <MovieRow title="Airing Today" movies={airingToday.results} />
+            </Suspense>
+            <Suspense fallback={<div className="h-48 animate-pulse bg-muted/20" />}>
+              <MovieRow title="Popular TV Shows" movies={popular.results} />
+            </Suspense>
+            <Suspense fallback={<div className="h-48 animate-pulse bg-muted/20" />}>
+              <MovieRow title="Currently On Air" movies={onTheAir.results} />
+            </Suspense>
+            <Suspense fallback={<div className="h-48 animate-pulse bg-muted/20" />}>
+              <MovieRow title="Top Rated TV Shows" movies={topRated.results} />
+            </Suspense>
+            <Suspense fallback={<div className="h-48 animate-pulse bg-muted/20" />}>
+              <MovieRow title="Drama" movies={drama.results} />
+            </Suspense>
+            <Suspense fallback={<div className="h-48 animate-pulse bg-muted/20" />}>
+              <MovieRow title="Comedy" movies={comedy.results} />
+            </Suspense>
+            <Suspense fallback={<div className="h-48 animate-pulse bg-muted/20" />}>
+              <MovieRow title="Sci-Fi & Fantasy" movies={sciFiFantasy.results} />
+            </Suspense>
+            <Suspense fallback={<div className="h-48 animate-pulse bg-muted/20" />}>
+              <MovieRow title="Crime" movies={crime.results} />
+            </Suspense>
           </div>
         )}
       </div>
