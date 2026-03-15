@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   X, ChevronDown, Server, Loader2, CheckCircle, XCircle, 
   RefreshCw, Plus, Trash2, Settings, Zap, BarChart3,
-  ChevronLeft, ChevronRight, SkipForward
+  ChevronLeft, ChevronRight, SkipForward, Shield
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -81,6 +81,12 @@ export function VideoPlayer({
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const triedServersRef = useRef<Set<number>>(new Set());
+  
+  // Ad/popup protection
+  const [clickShieldActive, setClickShieldActive] = useState(true);
+  const [clickCount, setClickCount] = useState(0);
+  const [showShieldMessage, setShowShieldMessage] = useState(false);
+  const CLICKS_TO_DISABLE_SHIELD = 2; // After 2 clicks on shield, disable it
 
   // Load servers on mount
   useEffect(() => {
@@ -91,6 +97,37 @@ export function VideoPlayer({
       : loadedServers.filter(s => s.id !== 'all-servers');
     setServers(filteredServers);
   }, [imdbId]);
+
+  // Block popup windows from streaming servers
+  useEffect(() => {
+    const originalOpen = window.open;
+    
+    // Override window.open to block popups from ads
+    window.open = function(...args) {
+      // Check if this is likely an ad popup (no url or suspicious patterns)
+      const url = args[0];
+      if (!url || 
+          url === 'about:blank' || 
+          url.includes('popup') || 
+          url.includes('ad') ||
+          url.includes('click') ||
+          url.includes('track')) {
+        return null;
+      }
+      return originalOpen.apply(window, args);
+    };
+
+    // Cleanup
+    return () => {
+      window.open = originalOpen;
+    };
+  }, []);
+
+  // Reset shield when server changes
+  useEffect(() => {
+    setClickShieldActive(true);
+    setClickCount(0);
+  }, [currentServerIndex, currentSeason, currentEpisode]);
 
   const currentServer = servers[currentServerIndex];
   const embedUrl = currentServer 
@@ -202,6 +239,26 @@ export function VideoPlayer({
       ? loadedServers 
       : loadedServers.filter(s => s.id !== 'all-servers');
     setServers(filteredServers);
+  };
+
+  // Handle click on shield overlay - absorbs ad clicks
+  const handleShieldClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const newCount = clickCount + 1;
+    setClickCount(newCount);
+    setShowShieldMessage(true);
+    
+    // Hide message after 1.5s
+    setTimeout(() => setShowShieldMessage(false), 1500);
+    
+    // After enough clicks, disable the shield so user can interact with player
+    if (newCount >= CLICKS_TO_DISABLE_SHIELD) {
+      setTimeout(() => {
+        setClickShieldActive(false);
+      }, 300);
+    }
   };
 
   // Auto-fetch logic with timeout
@@ -617,10 +674,32 @@ export function VideoPlayer({
         }}
       />
 
-      {/* Tip for users about ads */}
-      <div className="absolute bottom-4 left-4 z-10">
+      {/* Click Shield - absorbs ad clicks */}
+      {clickShieldActive && !isLoading && (
+        <div 
+          className="absolute inset-0 z-20 cursor-pointer"
+          onClick={handleShieldClick}
+          style={{ background: 'transparent' }}
+        >
+          {/* Shield indicator */}
+          <div className="absolute top-20 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/80 px-4 py-2 rounded-full">
+            <Shield className="w-4 h-4 text-green-500" />
+            <span className="text-white text-sm">Ad Protection Active - Click {CLICKS_TO_DISABLE_SHIELD - clickCount} more time(s) to watch</span>
+          </div>
+          
+          {/* Click feedback message */}
+          {showShieldMessage && (
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-green-500/90 text-white px-6 py-3 rounded-lg font-medium animate-pulse">
+              {clickCount >= CLICKS_TO_DISABLE_SHIELD ? 'Ad blocked! Starting video...' : `Click ${CLICKS_TO_DISABLE_SHIELD - clickCount} more time(s)`}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Tip for users */}
+      <div className="absolute bottom-4 left-4 z-10 pointer-events-none">
         <p className="text-white/40 text-xs max-w-xs">
-          Tip: If ads appear, try switching servers using the dropdown above. embed.su and vidsrc.cc usually have fewer ads.
+          Tip: Shield blocks popup ads. After 2 clicks, you can interact with the player normally.
         </p>
       </div>
     </div>
