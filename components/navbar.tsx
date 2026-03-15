@@ -16,6 +16,10 @@ import {
   Server,
   Zap,
   BarChart3,
+  RefreshCw,
+  Clock,
+  Trash2,
+  Activity,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SearchModal } from './search-modal';
@@ -25,7 +29,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { getAllServers, getServerStats, type ServerStats } from '@/lib/streaming-servers';
+import { getAllServers, getServerStats, resetServerStats, type ServerStats } from '@/lib/streaming-servers';
 
 export function Navbar() {
   const pathname = usePathname();
@@ -37,6 +41,7 @@ export function Navbar() {
   const [isServersDialogOpen, setIsServersDialogOpen] = useState(false);
   const [serversList, setServersList] = useState<ReturnType<typeof getServersListData>>([]);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
   const notificationRef = useRef<HTMLDivElement>(null);
 
@@ -49,14 +54,31 @@ export function Navbar() {
       const serverStats = stats[server.id];
       const total = serverStats ? serverStats.successCount + serverStats.failCount : 0;
       const successRate = total > 0 ? serverStats!.successCount / total : null;
+      const avgLoadTime = serverStats?.avgLoadTime ?? null;
       
       return {
         ...server,
         stats: serverStats,
         successRate,
-        total
+        total,
+        avgLoadTime
       };
     });
+  };
+
+  // Manual refresh function
+  const handleManualRefresh = () => {
+    setIsRefreshing(true);
+    setServersList(getServersListData());
+    setLastUpdated(new Date());
+    setTimeout(() => setIsRefreshing(false), 500);
+  };
+
+  // Reset all stats
+  const handleResetStats = () => {
+    resetServerStats();
+    setServersList(getServersListData());
+    setLastUpdated(new Date());
   };
 
   // Auto-fetch servers data when dialog is open
@@ -340,6 +362,17 @@ export function Navbar() {
                     <p className="text-xs text-gray-400">Free Plan</p>
                   </div>
                 </div>
+                {/* Mobile Servers Button */}
+                <button 
+                  onClick={() => {
+                    setIsServersDialogOpen(true);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-300 hover:text-white hover:bg-white/10 transition-colors rounded-lg"
+                >
+                  <Server className="w-4 h-4" />
+                  Servers (Reliability)
+                </button>
               </div>
             </div>
           </div>
@@ -352,9 +385,27 @@ export function Navbar() {
       <Dialog open={isServersDialogOpen} onOpenChange={setIsServersDialogOpen}>
         <DialogContent className="max-w-md max-h-[80vh] overflow-hidden">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Server className="w-5 h-5 text-primary" />
-              Servers - Sorted by Reliability
+            <DialogTitle className="flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <Server className="w-5 h-5 text-primary" />
+                Servers - Sorted by Reliability
+              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={handleManualRefresh}
+                  className="p-1.5 rounded-md hover:bg-muted transition-colors"
+                  title="Refresh"
+                >
+                  <RefreshCw className={cn("w-4 h-4 text-muted-foreground", isRefreshing && "animate-spin")} />
+                </button>
+                <button
+                  onClick={handleResetStats}
+                  className="p-1.5 rounded-md hover:bg-destructive/10 transition-colors"
+                  title="Reset all stats"
+                >
+                  <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive" />
+                </button>
+              </div>
             </DialogTitle>
             {lastUpdated && (
               <p className="text-xs text-muted-foreground flex items-center gap-2">
@@ -362,59 +413,89 @@ export function Navbar() {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                 </span>
-                Auto-updating every 5s
+                Auto-updating every 5s | Last: {lastUpdated.toLocaleTimeString()}
               </p>
             )}
           </DialogHeader>
           
           <div className="space-y-2 overflow-y-auto max-h-[60vh] pr-2">
-            {serversList.map((server, index) => {
-              const hasStats = server.total > 0;
-              const isGood = server.successRate !== null && server.successRate > 0.7;
-              const isMedium = server.successRate !== null && server.successRate > 0.4 && server.successRate <= 0.7;
-              const isPoor = server.successRate !== null && server.successRate <= 0.4;
-              
-              return (
-                <div 
-                  key={server.id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50 hover:border-border transition-colors"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <span className="text-xs text-muted-foreground w-5 text-center">
-                      #{index + 1}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">
-                        {server.name}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {server.url}
-                      </p>
+            {serversList.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+                <Server className="w-10 h-10 mb-2 opacity-50" />
+                <p className="text-sm">No servers available</p>
+              </div>
+            ) : (
+              serversList.map((server, index) => {
+                const hasStats = server.total > 0;
+                const isGood = server.successRate !== null && server.successRate > 0.7;
+                const isMedium = server.successRate !== null && server.successRate > 0.4 && server.successRate <= 0.7;
+                const isPoor = server.successRate !== null && server.successRate <= 0.4;
+                
+                return (
+                  <div 
+                    key={server.id}
+                    className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50 hover:border-border transition-colors"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className={cn(
+                        "text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full",
+                        index === 0 && "bg-primary/20 text-primary",
+                        index === 1 && "bg-yellow-500/20 text-yellow-500",
+                        index === 2 && "bg-orange-500/20 text-orange-500",
+                        index > 2 && "bg-muted text-muted-foreground"
+                      )}>
+                        {index + 1}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">
+                          {server.name}
+                        </p>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span>{server.url}</span>
+                          {hasStats && (
+                            <>
+                              <span className="text-border">|</span>
+                              <span className="flex items-center gap-1">
+                                <Activity className="w-3 h-3" />
+                                {server.total} tries
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-col items-end gap-0.5 shrink-0">
+                      {hasStats ? (
+                        <>
+                          <div className="flex items-center gap-1.5">
+                            <span className={cn(
+                              "text-sm font-semibold",
+                              isGood && "text-green-500",
+                              isMedium && "text-yellow-500",
+                              isPoor && "text-red-500"
+                            )}>
+                              {Math.round((server.successRate ?? 0) * 100)}%
+                            </span>
+                            {isGood && <Zap className="w-4 h-4 text-green-500" />}
+                            {isMedium && <BarChart3 className="w-4 h-4 text-yellow-500" />}
+                            {isPoor && <BarChart3 className="w-4 h-4 text-red-500" />}
+                          </div>
+                          {server.avgLoadTime && (
+                            <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                              <Clock className="w-2.5 h-2.5" />
+                              {(server.avgLoadTime / 1000).toFixed(1)}s avg
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <span className="text-xs text-muted-foreground bg-muted/50 px-2 py-0.5 rounded">New</span>
+                      )}
                     </div>
                   </div>
-                  
-                  <div className="flex items-center gap-2 shrink-0">
-                    {hasStats ? (
-                      <>
-                        <span className={cn(
-                          "text-xs font-medium",
-                          isGood && "text-green-500",
-                          isMedium && "text-yellow-500",
-                          isPoor && "text-red-500"
-                        )}>
-                          {Math.round((server.successRate ?? 0) * 100)}%
-                        </span>
-                        {isGood && <Zap className="w-4 h-4 text-green-500" />}
-                        {isMedium && <BarChart3 className="w-4 h-4 text-yellow-500" />}
-                        {isPoor && <BarChart3 className="w-4 h-4 text-red-500" />}
-                      </>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">No data</span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
           
           <div className="pt-3 border-t border-border">
