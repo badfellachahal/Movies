@@ -129,7 +129,7 @@ export function VideoPlayer({
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const triedServersRef = useRef<Set<number>>(new Set());
 
-  // Load servers on mount - use smart auto-fetch sorting
+  // Load servers on mount - use smart auto-fetch sorting and start auto-fetch immediately
   useEffect(() => {
     const loadedServers = getServersForAutoFetch();
     // If no IMDB ID, filter out the all-servers option
@@ -138,7 +138,23 @@ export function VideoPlayer({
       : loadedServers.filter(s => s.id !== 'all-servers');
     setServers(filteredServers);
     
-
+    // Start auto-fetch immediately with best server
+    if (filteredServers.length > 0) {
+      setIsAutoFetching(true);
+      setIsLoading(true);
+      setCurrentServerIndex(0);
+      setLoadStartTime(Date.now());
+      
+      // Show info about the first server being tried
+      const firstServer = filteredServers[0];
+      const stats = getServerStats()[firstServer?.id];
+      const hasGoodStats = stats && stats.successCount > stats.failCount;
+      setStatusMessage(
+        hasGoodStats 
+          ? `Connecting to ${firstServer?.name} (most reliable)...`
+          : `Connecting to ${firstServer?.name}...`
+      );
+    }
   }, [imdbId]);
 
   // Block popup windows and 3rd party redirects from streaming servers
@@ -299,7 +315,7 @@ export function VideoPlayer({
     setServers(filteredServers);
   };
 
-  // Auto-fetch logic with smart timeout
+  // Auto-fetch logic with smart timeout - starts immediately when servers are loaded
   useEffect(() => {
     if (!isAutoFetching || servers.length === 0) return;
 
@@ -314,20 +330,29 @@ export function VideoPlayer({
       setServerStatuses(prev => ({ ...prev, [currentId]: 'loading' }));
     }
     
-    // Show server reliability info
+    // Show server reliability info with better messaging
     const hasGoodStats = stats && stats.successCount > stats.failCount;
-    setStatusMessage(
-      hasGoodStats 
-        ? `Trying ${servers[currentServerIndex]?.name} (reliable)...`
-        : `Trying ${servers[currentServerIndex]?.name}...`
-    );
+    const successRate = stats ? Math.round((stats.successCount / (stats.successCount + stats.failCount)) * 100) : 0;
+    
+    if (currentServerIndex === 0) {
+      setStatusMessage(
+        hasGoodStats 
+          ? `Connecting to ${servers[currentServerIndex]?.name} (${successRate}% reliable)...`
+          : `Connecting to ${servers[currentServerIndex]?.name}...`
+      );
+    } else {
+      setStatusMessage(
+        hasGoodStats 
+          ? `Trying ${servers[currentServerIndex]?.name} (${successRate}% reliable)...`
+          : `Trying ${servers[currentServerIndex]?.name}...`
+      );
+    }
 
-    // Dynamic timeout: 4s for unknown servers, 6s for servers with good history
-    const timeout = hasGoodStats ? 6000 : 4000;
+    // Dynamic timeout: 5s for servers with good history, 3.5s for unknown/bad servers
+    const timeout = hasGoodStats ? 5000 : 3500;
     
     timeoutRef.current = setTimeout(() => {
       if (isLoading && isAutoFetching) {
-
         tryNextServer();
       }
     }, timeout);
