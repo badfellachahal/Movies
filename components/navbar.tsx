@@ -13,9 +13,19 @@ import {
   Settings,
   HelpCircle,
   LogOut,
+  Server,
+  Zap,
+  BarChart3,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SearchModal } from './search-modal';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { getAllServers, getServerStats, type ServerStats } from '@/lib/streaming-servers';
 
 export function Navbar() {
   const pathname = usePathname();
@@ -24,8 +34,28 @@ export function Navbar() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [isServersDialogOpen, setIsServersDialogOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
   const notificationRef = useRef<HTMLDivElement>(null);
+
+  // Get servers sorted by reliability for the dialog
+  const getServersList = () => {
+    const servers = getAllServers();
+    const stats = getServerStats();
+    
+    return servers.map(server => {
+      const serverStats = stats[server.id];
+      const total = serverStats ? serverStats.successCount + serverStats.failCount : 0;
+      const successRate = total > 0 ? serverStats!.successCount / total : null;
+      
+      return {
+        ...server,
+        stats: serverStats,
+        successRate,
+        total
+      };
+    });
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -213,6 +243,16 @@ export function Navbar() {
                         <Settings className="w-4 h-4" />
                         Account Settings
                       </button>
+                      <button 
+                        onClick={() => {
+                          setIsServersDialogOpen(true);
+                          setIsProfileOpen(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
+                      >
+                        <Server className="w-4 h-4" />
+                        Servers (Reliability)
+                      </button>
                       <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/10 transition-colors">
                         <HelpCircle className="w-4 h-4" />
                         Help Center
@@ -288,6 +328,74 @@ export function Navbar() {
       </nav>
 
       <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+
+      {/* Servers Sorted by Reliability Dialog */}
+      <Dialog open={isServersDialogOpen} onOpenChange={setIsServersDialogOpen}>
+        <DialogContent className="max-w-md max-h-[80vh] overflow-hidden">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Server className="w-5 h-5 text-primary" />
+              Servers - Sorted by Reliability
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-2 overflow-y-auto max-h-[60vh] pr-2">
+            {getServersList().map((server, index) => {
+              const hasStats = server.total > 0;
+              const isGood = server.successRate !== null && server.successRate > 0.7;
+              const isMedium = server.successRate !== null && server.successRate > 0.4 && server.successRate <= 0.7;
+              const isPoor = server.successRate !== null && server.successRate <= 0.4;
+              
+              return (
+                <div 
+                  key={server.id}
+                  className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50 hover:border-border transition-colors"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="text-xs text-muted-foreground w-5 text-center">
+                      #{index + 1}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {server.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {server.url}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 shrink-0">
+                    {hasStats ? (
+                      <>
+                        <span className={cn(
+                          "text-xs font-medium",
+                          isGood && "text-green-500",
+                          isMedium && "text-yellow-500",
+                          isPoor && "text-red-500"
+                        )}>
+                          {Math.round((server.successRate ?? 0) * 100)}%
+                        </span>
+                        {isGood && <Zap className="w-4 h-4 text-green-500" />}
+                        {isMedium && <BarChart3 className="w-4 h-4 text-yellow-500" />}
+                        {isPoor && <BarChart3 className="w-4 h-4 text-red-500" />}
+                      </>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">No data</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          
+          <div className="pt-3 border-t border-border">
+            <p className="text-xs text-muted-foreground text-center">
+              Servers are automatically sorted by success rate, recent usage, and load time.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
