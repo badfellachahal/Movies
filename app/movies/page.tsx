@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import type { Metadata } from 'next';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
 import { MovieRow } from '@/components/movie-row';
@@ -11,6 +12,11 @@ import {
   GENRES,
   MovieResponse,
 } from '@/lib/tmdb';
+
+export const metadata: Metadata = {
+  title: 'Movies - TechVyro',
+  description: 'Discover the latest and greatest films. Browse popular, top-rated, and upcoming movies.',
+};
 
 const emptyResponse: MovieResponse = { page: 1, results: [], total_pages: 0, total_results: 0 };
 
@@ -46,7 +52,7 @@ export default async function MoviesPage() {
   const hasContent = popular.results.length > 0;
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen bg-background" suppressHydrationWarning>
       <Navbar />
       
       <div className="pt-20 sm:pt-24 pb-4 md:pb-8">

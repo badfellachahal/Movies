@@ -43,6 +43,7 @@ import { getAllServers, getServerStats, resetServerStats, type ServerStats } fro
 
 export function Navbar() {
   const pathname = usePathname();
+  const [isMounted, setIsMounted] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -54,6 +55,10 @@ export function Navbar() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
   const notificationRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Get servers sorted by reliability for the dialog
   const getServersListData = () => {
@@ -163,6 +168,27 @@ export function Navbar() {
     { id: 2, title: 'Continue Watching', message: 'Resume where you left off', time: '1d ago' },
     { id: 3, title: 'Recommended for You', message: 'Based on your watch history', time: '3d ago' },
   ];
+
+  // Prevent hydration mismatch by rendering placeholder on server
+  if (!isMounted) {
+    return (
+      <nav className="fixed top-0 left-0 right-0 z-50 h-16 md:h-[68px] bg-gradient-to-b from-black/90 via-black/50 to-transparent">
+        <div className="container mx-auto px-4 lg:px-8">
+          <div className="flex items-center justify-between h-16 md:h-[68px]">
+            <div className="flex items-center gap-8 lg:gap-12">
+              <span 
+                className="text-2xl md:text-3xl font-bold tracking-wider" 
+                style={{ fontFamily: 'var(--font-bebas)' }}
+              >
+                <span className="text-foreground">TECH</span>
+                <span className="text-primary drop-shadow-[0_0_10px_rgba(229,9,20,0.5)]">VYRO</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </nav>
+    );
+  }
 
   return (
     <>
@@ -441,7 +467,7 @@ export function Navbar() {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500"></span>
                 </span>
-                Auto-updating | {lastUpdated.toLocaleTimeString()}
+                <span suppressHydrationWarning>Auto-updating | {lastUpdated.toLocaleTimeString()}</span>
               </p>
             )}
           </DialogHeader>

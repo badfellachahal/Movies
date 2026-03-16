@@ -128,15 +128,26 @@ export function VideoPlayer({
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const triedServersRef = useRef<Set<number>>(new Set());
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Mount check for hydration safety
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Load servers on mount - use smart auto-fetch sorting and start auto-fetch immediately
   useEffect(() => {
+    if (!isMounted) return;
+    
     const loadedServers = getServersForAutoFetch();
     // If no IMDB ID, filter out the all-servers option
     const filteredServers = imdbId 
       ? loadedServers 
       : loadedServers.filter(s => s.id !== 'all-servers');
     setServers(filteredServers);
+    
+    console.log("[v0] Loaded servers:", filteredServers.map(s => s.name));
+    console.log("[v0] TMDB ID:", tmdbId, "Type:", type, "IMDB:", imdbId);
     
     // Start auto-fetch immediately with best server
     if (filteredServers.length > 0) {
@@ -149,13 +160,16 @@ export function VideoPlayer({
       const firstServer = filteredServers[0];
       const stats = getServerStats()[firstServer?.id];
       const hasGoodStats = stats && stats.successCount > stats.failCount;
+      
+      console.log("[v0] Starting with server:", firstServer?.name, "URL template:", firstServer?.movieTemplate);
+      
       setStatusMessage(
         hasGoodStats 
           ? `Connecting to ${firstServer?.name} (most reliable)...`
           : `Connecting to ${firstServer?.name}...`
       );
     }
-  }, [imdbId]);
+  }, [imdbId, isMounted, tmdbId, type]);
 
   // Block popup windows and 3rd party redirects from streaming servers
   useEffect(() => {
@@ -192,6 +206,13 @@ export function VideoPlayer({
   const embedUrl = currentServer 
     ? getEmbedUrl(currentServer, tmdbId, type, currentSeason, currentEpisode, imdbId)
     : '';
+  
+  // Debug log embed URL when it changes
+  useEffect(() => {
+    if (embedUrl) {
+      console.log("[v0] Current embed URL:", embedUrl);
+    }
+  }, [embedUrl]);
 
   const totalEpisodes = episodesPerSeason[currentSeason - 1] || 10;
   const hasNextEpisode = type === 'tv' && (currentEpisode < totalEpisodes || currentSeason < totalSeasons);
@@ -348,8 +369,8 @@ export function VideoPlayer({
       );
     }
 
-    // Dynamic timeout: 5s for servers with good history, 3.5s for unknown/bad servers
-    const timeout = hasGoodStats ? 5000 : 3500;
+    // Dynamic timeout: 4s for servers with good history, 3s for unknown/bad servers
+    const timeout = hasGoodStats ? 4000 : 3000;
     
     timeoutRef.current = setTimeout(() => {
       if (isLoading && isAutoFetching) {
@@ -1081,20 +1102,27 @@ export function VideoPlayer({
         />
         
         {/* Video iframe */}
-        <iframe
-          ref={iframeRef}
-          src={embedUrl}
-          className="w-full h-full"
-          allowFullScreen
-          allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
-          referrerPolicy="no-referrer"
-          onLoad={handleIframeLoad}
-          onError={() => {
-            if (isAutoFetching) {
-              tryNextServer();
-            }
-          }}
-        />
+        {isMounted && embedUrl && (
+          <iframe
+            key={embedUrl}
+            ref={iframeRef}
+            src={embedUrl}
+            className="w-full h-full"
+            allowFullScreen
+            allow="autoplay; fullscreen; picture-in-picture; encrypted-media; accelerometer; gyroscope; clipboard-write"
+            referrerPolicy="no-referrer-when-downgrade"
+            onLoad={() => {
+              console.log("[v0] Iframe loaded successfully:", embedUrl);
+              handleIframeLoad();
+            }}
+            onError={(e) => {
+              console.log("[v0] Iframe error:", embedUrl, e);
+              if (isAutoFetching) {
+                tryNextServer();
+              }
+            }}
+          />
+        )}
       </div>
     </div>
   );

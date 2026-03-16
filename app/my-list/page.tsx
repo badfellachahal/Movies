@@ -42,7 +42,7 @@ export default function MyListPage() {
   };
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen bg-background" suppressHydrationWarning>
       <Navbar />
       
       <div className="pt-24 pb-8 min-h-[80vh]">
