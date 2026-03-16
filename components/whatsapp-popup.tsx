@@ -34,15 +34,19 @@ export function WhatsAppPopup() {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ perspective: '1200px' }}>
-      {/* Backdrop with gradient - no auto close on click */}
+    <div 
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4" 
+      style={{ perspective: '1200px' }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* Backdrop with gradient - clicking does nothing */}
       <div 
-        className={`absolute inset-0 bg-gradient-to-br from-black/80 via-black/70 to-emerald-950/50 backdrop-blur-xl transition-opacity duration-500 ${isAnimating ? 'opacity-100' : 'opacity-0'}`}
+        className={`absolute inset-0 bg-gradient-to-br from-black/90 via-black/85 to-emerald-950/60 backdrop-blur-xl transition-opacity duration-500 pointer-events-none ${isAnimating ? 'opacity-100' : 'opacity-0'}`}
       />
       
       {/* Modal */}
       <div 
-        className={`relative w-full max-w-sm transition-all duration-700 ease-out ${
+        className={`relative w-full max-w-sm transition-all duration-700 ease-out pointer-events-auto ${
           isClosing ? 'scale-0 rotate-12 opacity-0' : ''
         }`}
         style={{
@@ -52,6 +56,7 @@ export function WhatsAppPopup() {
           opacity: isAnimating ? 1 : 0,
           transformStyle: 'preserve-3d',
         }}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Outer glow ring */}
         <div 
