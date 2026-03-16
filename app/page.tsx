@@ -69,7 +69,7 @@ export default async function HomePage() {
   const hasContent = trending.results.length > 0;
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen bg-background" suppressHydrationWarning>
       <Navbar />
       
       {!hasApiKey || !hasContent ? (

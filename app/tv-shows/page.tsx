@@ -60,7 +60,7 @@ export default async function TVShowsPage() {
   const hasContent = popular.results.length > 0;
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen bg-background" suppressHydrationWarning>
       <Navbar />
       
       <div className="pt-20 sm:pt-24 pb-4 md:pb-8">

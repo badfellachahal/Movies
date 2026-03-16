@@ -34,7 +34,7 @@ export default async function MoviePage({ params }: MoviePageProps) {
   }
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen bg-background" suppressHydrationWarning>
       <Navbar />
       
       <MovieDetailClient movie={movie} />

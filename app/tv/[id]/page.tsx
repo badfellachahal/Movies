@@ -34,7 +34,7 @@ export default async function TVPage({ params }: TVPageProps) {
   }
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen bg-background" suppressHydrationWarning>
       <Navbar />
       
       <TVDetailClient show={show} />

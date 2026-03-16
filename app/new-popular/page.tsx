@@ -46,7 +46,7 @@ export default async function NewPopularPage() {
   const hasContent = trendingWeek.results.length > 0;
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen bg-background" suppressHydrationWarning>
       <Navbar />
       
       <div className="pt-24 pb-8">

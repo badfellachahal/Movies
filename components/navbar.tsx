@@ -441,7 +441,7 @@ export function Navbar() {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500"></span>
                 </span>
-                Auto-updating | {lastUpdated.toLocaleTimeString()}
+                <span suppressHydrationWarning>Auto-updating | {lastUpdated.toLocaleTimeString()}</span>
               </p>
             )}
           </DialogHeader>
