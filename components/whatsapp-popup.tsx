@@ -18,7 +18,7 @@ export function WhatsAppPopup() {
       }
       setIsOpen(true);
       setTimeout(() => setIsAnimating(true), 50);
-    }, 2000);
+    }, 500);
     
     return () => clearTimeout(timer);
   }, []);
