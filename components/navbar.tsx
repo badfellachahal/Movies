@@ -43,6 +43,7 @@ import { getAllServers, getServerStats, resetServerStats, type ServerStats } fro
 
 export function Navbar() {
   const pathname = usePathname();
+  const [isMounted, setIsMounted] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -54,6 +55,10 @@ export function Navbar() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
   const notificationRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Get servers sorted by reliability for the dialog
   const getServersListData = () => {
