@@ -543,34 +543,34 @@ export function VideoPlayer({
                     <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                   </button>
                 </DialogTrigger>
-              <DialogContent className="max-w-[calc(100vw-24px)] sm:max-w-md max-h-[80vh] overflow-y-auto">
-                <DialogHeader>
+              <DialogContent className="w-[calc(100vw-32px)] max-w-md max-h-[85vh] overflow-y-auto p-4">
+                <DialogHeader className="pb-2">
                   <DialogTitle className="flex items-center justify-between">
-                    <span className="flex items-center gap-2">
-                      <Server className="w-5 h-5 text-red-500" />
+                    <span className="flex items-center gap-1.5 text-sm">
+                      <Server className="w-4 h-4 text-red-500" />
                       Server Settings
                     </span>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-0.5">
                       <button
                         onClick={() => setServerStatsRefresh(prev => prev + 1)}
-                        className="p-1.5 rounded-md hover:bg-muted transition-colors"
+                        className="p-1 rounded-md hover:bg-muted transition-colors"
                         title="Refresh"
                       >
-                        <RefreshCw className="w-4 h-4 text-muted-foreground" />
+                        <RefreshCw className="w-3.5 h-3.5 text-muted-foreground" />
                       </button>
                       <button
                         onClick={handleResetStats}
-                        className="p-1.5 rounded-md hover:bg-destructive/10 transition-colors"
+                        className="p-1 rounded-md hover:bg-destructive/10 transition-colors"
                         title="Reset all stats"
                       >
-                        <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive" />
+                        <Trash2 className="w-3.5 h-3.5 text-muted-foreground hover:text-destructive" />
                       </button>
                     </div>
                   </DialogTitle>
-                  <p className="text-xs text-muted-foreground flex items-center gap-2">
-                    <span className="relative flex h-2 w-2">
+                  <p className="text-[10px] text-muted-foreground flex items-center gap-1.5">
+                    <span className="relative flex h-1.5 w-1.5">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500"></span>
                     </span>
                     Auto-updating every 5s
                   </p>
@@ -578,48 +578,48 @@ export function VideoPlayer({
                 
                 <div className="space-y-4 py-4">
                   {/* Audio/Subtitle Tip */}
-                  <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
+                  <div className="p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/30">
                     <div className="flex items-start gap-2">
-                      <div className="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0 mt-0.5">
-                        <span className="text-blue-400 text-xs font-bold">i</span>
+                      <div className="w-4 h-4 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                        <span className="text-blue-400 text-[10px] font-bold">i</span>
                       </div>
                       <div>
-                        <p className="text-xs font-medium text-blue-400 mb-1">Audio & Subtitles</p>
-                        <p className="text-[11px] text-muted-foreground leading-relaxed">
-                          Use the CC/Settings icon inside the video player to change audio language and subtitles. Servers marked with (Multi-Audio) support multiple languages.
+                        <p className="text-[11px] font-medium text-blue-400 mb-0.5">Audio & Subtitles</p>
+                        <p className="text-[10px] text-muted-foreground leading-relaxed">
+                          Video player ke andar CC/Settings icon use karein audio language aur subtitles change karne ke liye.
                         </p>
                       </div>
                     </div>
                   </div>
 
                   {/* Current Server & Quick Switch */}
-                  <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs text-muted-foreground">Current Server</span>
+                  <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[11px] text-muted-foreground">Current Server</span>
                       <button
                         onClick={() => {
                           handleRetryAutoFetch();
                           setShowSettings(false);
                         }}
-                        className="text-xs text-red-500 hover:text-red-400 flex items-center gap-1"
+                        className="text-[11px] text-red-500 hover:text-red-400 flex items-center gap-1"
                       >
                         <RefreshCw className="w-3 h-3" />
                         Auto-detect
                       </button>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className={`w-2.5 h-2.5 rounded-full ${serverStatuses[currentServer?.id || ''] === 'success' ? 'bg-green-500 animate-pulse' : 'bg-yellow-500'}`} />
-                      <span className="font-medium text-foreground">{currentServer?.name}</span>
+                      <div className={`w-2 h-2 rounded-full ${serverStatuses[currentServer?.id || ''] === 'success' ? 'bg-green-500 animate-pulse' : 'bg-yellow-500'}`} />
+                      <span className="font-medium text-sm text-foreground truncate">{currentServer?.name}</span>
                     </div>
                   </div>
 
                   {/* Quick Server Switch */}
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-medium flex items-center gap-2">
-                      <Zap className="w-4 h-4 text-yellow-500" />
+                  <div className="space-y-1.5">
+                    <h4 className="text-[11px] font-medium flex items-center gap-1.5 text-muted-foreground">
+                      <Zap className="w-3 h-3 text-yellow-500" />
                       Quick Switch Server
                     </h4>
-                    <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto">
+                    <div className="grid grid-cols-2 gap-1.5 max-h-28 overflow-y-auto">
                       {servers.slice(0, 8).map((s, index) => {
                         const stats = getServerStats()[s.id];
                         const isActive = currentServerIndex === index;
@@ -632,15 +632,15 @@ export function VideoPlayer({
                               handleServerChange(index);
                               setShowSettings(false);
                             }}
-                            className={`p-2 rounded-lg text-left text-xs transition-all ${
+                            className={`p-1.5 rounded-lg text-left text-[10px] transition-all ${
                               isActive 
                                 ? 'bg-red-500/20 border-2 border-red-500' 
-                                : 'bg-muted/30 border border-border hover:border-red-500/50'
+                                : 'bg-muted/30 border border-border hover:border-red-500/50 active:bg-red-500/10'
                             }`}
                           >
-                            <div className="flex items-center gap-1.5">
-                              {isGood && <Zap className="w-3 h-3 text-green-500" />}
-                              <span className="truncate font-medium">{s.name}</span>
+                            <div className="flex items-center gap-1">
+                              {isGood && <Zap className="w-2.5 h-2.5 text-green-500 shrink-0" />}
+                              <span className="truncate font-medium">{s.name.replace(' (Multi-Audio)', '')}</span>
                             </div>
                           </button>
                         );
@@ -649,72 +649,76 @@ export function VideoPlayer({
                   </div>
 
                   {/* Summary Stats Cards */}
-                  <div className="grid grid-cols-4 gap-2">
-                    <div className="flex flex-col items-center p-2 rounded-lg bg-red-500/10 border border-red-500/20">
-                      <Server className="w-4 h-4 text-red-500 mb-1" />
-                      <span className="text-lg font-bold text-foreground">{getSummaryStats().totalServers}</span>
-                      <span className="text-[10px] text-muted-foreground">Total</span>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    <div className="flex flex-col items-center p-1.5 rounded-lg bg-red-500/10 border border-red-500/20">
+                      <Server className="w-3 h-3 text-red-500 mb-0.5" />
+                      <span className="text-sm font-bold text-foreground">{getSummaryStats().totalServers}</span>
+                      <span className="text-[9px] text-muted-foreground">Total</span>
                     </div>
-                    <div className="flex flex-col items-center p-2 rounded-lg bg-green-500/10 border border-green-500/20">
-                      <CheckCircle2 className="w-4 h-4 text-green-500 mb-1" />
-                      <span className="text-lg font-bold text-green-500">{getSummaryStats().goodServers}</span>
-                      <span className="text-[10px] text-muted-foreground">Good</span>
+                    <div className="flex flex-col items-center p-1.5 rounded-lg bg-green-500/10 border border-green-500/20">
+                      <CheckCircle2 className="w-3 h-3 text-green-500 mb-0.5" />
+                      <span className="text-sm font-bold text-green-500">{getSummaryStats().goodServers}</span>
+                      <span className="text-[9px] text-muted-foreground">Good</span>
                     </div>
-                    <div className="flex flex-col items-center p-2 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                      <Activity className="w-4 h-4 text-blue-500 mb-1" />
-                      <span className="text-lg font-bold text-blue-500">{getSummaryStats().totalRequests}</span>
-                      <span className="text-[10px] text-muted-foreground">Requests</span>
+                    <div className="flex flex-col items-center p-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                      <Activity className="w-3 h-3 text-blue-500 mb-0.5" />
+                      <span className="text-sm font-bold text-blue-500">{getSummaryStats().totalRequests}</span>
+                      <span className="text-[9px] text-muted-foreground">Requests</span>
                     </div>
-                    <div className="flex flex-col items-center p-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
-                      <TrendingUp className="w-4 h-4 text-yellow-500 mb-1" />
-                      <span className="text-lg font-bold text-yellow-500">{Math.round(getSummaryStats().avgSuccessRate * 100)}%</span>
-                      <span className="text-[10px] text-muted-foreground">Avg Rate</span>
+                    <div className="flex flex-col items-center p-1.5 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                      <TrendingUp className="w-3 h-3 text-yellow-500 mb-0.5" />
+                      <span className="text-sm font-bold text-yellow-500">{Math.round(getSummaryStats().avgSuccessRate * 100)}%</span>
+                      <span className="text-[9px] text-muted-foreground">Avg Rate</span>
                     </div>
                   </div>
 
                   {/* Add Server Button */}
                   <Button 
                     variant="outline" 
-                    className="w-full gap-2"
+                    size="sm"
+                    className="w-full gap-1.5 text-xs h-8"
                     onClick={() => setShowAddServer(!showAddServer)}
                   >
-                    <Plus className="w-4 h-4" />
+                    <Plus className="w-3 h-3" />
                     Add Custom Server
                   </Button>
                   
                   {/* Add Server Form */}
                   {showAddServer && (
-                    <div className="space-y-3 p-3 border rounded-lg bg-muted/50">
-                      <div className="space-y-2">
-                        <Label htmlFor="serverName">Server Name</Label>
+                    <div className="space-y-2 p-2.5 border rounded-lg bg-muted/50">
+                      <div className="space-y-1">
+                        <Label htmlFor="serverName" className="text-[11px]">Server Name</Label>
                         <Input 
                           id="serverName"
                           placeholder="My Server"
                           value={newServerName}
                           onChange={(e) => setNewServerName(e.target.value)}
+                          className="h-8 text-xs"
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="movieUrl">Movie URL Template</Label>
+                      <div className="space-y-1">
+                        <Label htmlFor="movieUrl" className="text-[11px]">Movie URL Template</Label>
                         <Input 
                           id="movieUrl"
                           placeholder="https://example.com/movie/{id}"
                           value={newServerMovie}
                           onChange={(e) => setNewServerMovie(e.target.value)}
+                          className="h-8 text-xs"
                         />
-                        <p className="text-xs text-muted-foreground">Use {'{id}'} for TMDB ID</p>
+                        <p className="text-[9px] text-muted-foreground">Use {'{id}'} for TMDB ID</p>
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="tvUrl">TV URL Template</Label>
+                      <div className="space-y-1">
+                        <Label htmlFor="tvUrl" className="text-[11px]">TV URL Template</Label>
                         <Input 
                           id="tvUrl"
                           placeholder="https://example.com/tv/{id}/{season}/{episode}"
                           value={newServerTv}
                           onChange={(e) => setNewServerTv(e.target.value)}
+                          className="h-8 text-xs"
                         />
-                        <p className="text-xs text-muted-foreground">Use {'{id}'}, {'{season}'}, {'{episode}'}</p>
+                        <p className="text-[9px] text-muted-foreground">Use {'{id}'}, {'{season}'}, {'{episode}'}</p>
                       </div>
-                      <Button onClick={handleAddServer} className="w-full">
+                      <Button onClick={handleAddServer} size="sm" className="w-full h-8 text-xs">
                         Add Server
                       </Button>
                     </div>
@@ -722,21 +726,21 @@ export function VideoPlayer({
                   
                   {/* Custom Servers List */}
                   {getCustomServers().length > 0 && (
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-medium">Custom Servers</h4>
+                    <div className="space-y-1.5">
+                      <h4 className="text-[11px] font-medium text-muted-foreground">Custom Servers</h4>
                       {getCustomServers().map((server) => (
                         <div 
                           key={server.id}
-                          className="flex items-center justify-between p-2 border rounded-lg"
+                          className="flex items-center justify-between p-1.5 border rounded-lg"
                         >
-                          <span className="text-sm">{server.name}</span>
+                          <span className="text-xs truncate">{server.name}</span>
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                            className="h-6 w-6 text-red-500 hover:text-red-600 hover:bg-red-500/10"
                             onClick={() => handleRemoveServer(server.id)}
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-3 h-3" />
                           </Button>
                         </div>
                       ))}
