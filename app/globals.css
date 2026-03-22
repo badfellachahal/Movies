@@ -241,3 +241,9 @@ html {
   background-size: 200% 200%;
   animation: gradient-x 3s ease infinite;
 }
+
+/* Hero banner slide progress bar */
+@keyframes slideProgress {
+  from { width: 0%; }
+  to { width: 100%; }
+}

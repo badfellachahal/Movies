@@ -6,6 +6,7 @@ import { Play, Plus, Check, Share2, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { VideoPlayer } from '@/components/video-player';
 import { getImageUrl } from '@/lib/tmdb';
+import { saveToWatchHistory } from '@/components/continue-watching';
 
 interface MovieDetailClientProps {
   movie: {
@@ -162,7 +163,16 @@ export function MovieDetailClient({ movie }: MovieDetailClientProps) {
                 <Button 
                   size="default"
                   className="gap-1.5 md:gap-2 bg-white text-black hover:bg-white/90 font-semibold shadow-lg text-xs sm:text-sm md:text-base px-4 md:px-6"
-                  onClick={() => setShowPlayer(true)}
+                  onClick={() => {
+                    saveToWatchHistory({
+                      id: movie.id,
+                      title: movie.title,
+                      poster_path: movie.poster_path,
+                      backdrop_path: movie.backdrop_path,
+                      media_type: 'movie',
+                    });
+                    setShowPlayer(true);
+                  }}
                 >
                   <Play className="w-4 h-4 md:w-5 md:h-5 fill-current" />
                   Play

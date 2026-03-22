@@ -6,6 +6,7 @@ import { Play, Plus, Check, Share2, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { VideoPlayer } from '@/components/video-player';
 import { getImageUrl } from '@/lib/tmdb';
+import { saveToWatchHistory } from '@/components/continue-watching';
 
 interface TVDetailClientProps {
   show: {
@@ -171,7 +172,18 @@ export function TVDetailClient({ show }: TVDetailClientProps) {
                 <Button 
                   size="default"
                   className="gap-1.5 md:gap-2 bg-white text-black hover:bg-white/90 font-semibold shadow-lg text-xs sm:text-sm md:text-base px-4 md:px-6"
-                  onClick={() => setShowPlayer(true)}
+                  onClick={() => {
+                    saveToWatchHistory({
+                      id: show.id,
+                      title,
+                      poster_path: show.poster_path,
+                      backdrop_path: show.backdrop_path,
+                      media_type: 'tv',
+                      season: 1,
+                      episode: 1,
+                    });
+                    setShowPlayer(true);
+                  }}
                 >
                   <Play className="w-4 h-4 md:w-5 md:h-5 fill-current" />
                   Play
