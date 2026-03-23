@@ -19,12 +19,21 @@ A Netflix-style movie and TV show streaming website built with **Next.js 16 App 
 
 ## Key Features
 - **Hero Banner** — Auto-slides with animated progress bar per indicator dot
-- **Genre Filter** — Scrollable genre pills on Movies & TV Shows pages with live filtering via TMDB Discover API
+- **Genre Filter** — Scrollable genre pills on Movies & TV Shows pages with live filtering via TMDB Discover API; Load More pagination
+- **Language Filter** — Browse movies/TV by original language (14 languages) on Movies & TV pages
 - **Continue Watching** — localStorage-based watch history shown as a top row on home page; saved when Play is clicked on detail pages
-- **Search Modal** — With recent searches (localStorage) and popular search chips
+- **Search Modal** — Advanced filters: type (movie/TV/all), era (decade), minimum rating (7+/8+/9+); recent searches in localStorage
 - **Watchlist (My List)** — Add/remove via localStorage `myList` key
 - **Video Player** — Embedded iframe player with multiple streaming server fallback
 - **WhatsApp Popup** — sessionStorage-gated, shows once per session after 4s delay
+- **Mobile Bottom Nav** — Fixed bottom navigation for mobile devices
+- **Season & Episode Guide** — Dropdown season selector; episode list with thumbnails, air dates, ratings; inline "Now Playing" panel with prev/next navigation
+- **User Reviews** — TMDB reviews with Load More on movie/TV detail pages
+- **Actor/Person Pages** — Full bio, birthday, filmography grids (`/person/[id]`)
+- **Trailer Modal** — YouTube trailer playback on movie/TV detail pages
+- **Collections/Franchises** — 16 popular franchises browsable at `/collections`; individual collection pages at `/collection/[id]`
+- **User Ratings** — Star rating (1–5) per movie/TV show saved to localStorage; shown on detail pages
+- **PWA** — Web App Manifest (`/manifest.json`) with shortcuts, theme color, apple-web-app metadata
 
 ## localStorage Keys
 - `myList` — watchlist items

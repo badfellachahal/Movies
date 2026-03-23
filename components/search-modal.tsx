@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Search, X, Clock, TrendingUp } from 'lucide-react';
+import { Search, X, Clock, TrendingUp, SlidersHorizontal, ChevronDown, Star, Calendar } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
@@ -19,6 +19,30 @@ const POPULAR_SEARCHES = [
 ];
 
 const RECENT_KEY = 'recentSearches';
+
+const CURRENT_YEAR = new Date().getFullYear();
+const DECADE_OPTIONS = [
+  { label: 'Any Year', value: '' },
+  { label: '2020s', value: '2020' },
+  { label: '2010s', value: '2010' },
+  { label: '2000s', value: '2000' },
+  { label: '1990s', value: '1990' },
+  { label: '1980s', value: '1980' },
+  { label: 'Before 1980', value: '1900' },
+];
+
+const TYPE_OPTIONS = [
+  { label: 'All', value: 'multi' },
+  { label: 'Movies', value: 'movie' },
+  { label: 'TV Shows', value: 'tv' },
+];
+
+const RATING_OPTIONS = [
+  { label: 'Any Rating', value: 0 },
+  { label: '7+ ⭐', value: 7 },
+  { label: '8+ ⭐', value: 8 },
+  { label: '9+ ⭐', value: 9 },
+];
 
 function getRecentSearches(): string[] {
   if (typeof window === 'undefined') return [];
@@ -45,14 +69,20 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const [results, setResults] = useState<Movie[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Filters
+  const [typeFilter, setTypeFilter] = useState('multi');
+  const [decadeFilter, setDecadeFilter] = useState('');
+  const [ratingFilter, setRatingFilter] = useState(0);
 
   useEffect(() => {
-    if (isOpen) {
-      setRecentSearches(getRecentSearches());
-    }
+    if (isOpen) setRecentSearches(getRecentSearches());
   }, [isOpen]);
 
-  const handleSearch = useCallback(async (searchQuery: string) => {
+  const hasActiveFilters = typeFilter !== 'multi' || decadeFilter !== '' || ratingFilter > 0;
+
+  const handleSearch = useCallback(async (searchQuery: string, type: string, decade: string, rating: number) => {
     if (!searchQuery.trim()) {
       setResults([]);
       return;
@@ -60,9 +90,35 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/search?query=${encodeURIComponent(searchQuery)}`);
+      const params = new URLSearchParams({ query: searchQuery });
+      if (type !== 'multi') params.set('type', type);
+      if (decade) params.set('year', decade);
+      if (rating > 0) params.set('rating', String(rating));
+
+      const response = await fetch(`/api/search?${params}`);
       const data = await response.json();
-      setResults(data.results?.filter((item: Movie) => item.poster_path).slice(0, 12) || []);
+
+      let filtered = data.results || [];
+
+      // Client-side decade filter
+      if (decade) {
+        const from = parseInt(decade, 10);
+        const to = decade === '1900' ? 1979 : from + 9;
+        filtered = filtered.filter((item: Movie) => {
+          const dateStr = item.release_date || item.first_air_date || '';
+          const year = parseInt(dateStr.slice(0, 4), 10);
+          if (isNaN(year)) return false;
+          if (decade === '1900') return year < 1980;
+          return year >= from && year <= to;
+        });
+      }
+
+      // Client-side rating filter
+      if (rating > 0) {
+        filtered = filtered.filter((item: Movie) => (item.vote_average || 0) >= rating);
+      }
+
+      setResults(filtered.filter((item: Movie) => item.poster_path).slice(0, 18));
     } catch {
       // ignore
     } finally {
@@ -72,10 +128,10 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
   useEffect(() => {
     const debounce = setTimeout(() => {
-      handleSearch(query);
+      handleSearch(query, typeFilter, decadeFilter, ratingFilter);
     }, 300);
     return () => clearTimeout(debounce);
-  }, [query, handleSearch]);
+  }, [query, typeFilter, decadeFilter, ratingFilter, handleSearch]);
 
   useEffect(() => {
     if (isOpen) {
@@ -84,21 +140,18 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
       document.body.style.overflow = 'unset';
       setQuery('');
       setResults([]);
+      setShowFilters(false);
     }
     return () => { document.body.style.overflow = 'unset'; };
   }, [isOpen]);
 
   useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
+    const handleEscape = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', handleEscape);
     return () => window.removeEventListener('keydown', handleEscape);
   }, [onClose]);
 
-  const handleChipClick = (term: string) => {
-    setQuery(term);
-  };
+  const handleChipClick = (term: string) => setQuery(term);
 
   const handleResultClick = () => {
     if (query.trim()) saveRecentSearch(query.trim());
@@ -110,13 +163,20 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
     setRecentSearches([]);
   };
 
+  const resetFilters = () => {
+    setTypeFilter('multi');
+    setDecadeFilter('');
+    setRatingFilter(0);
+  };
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 bg-background/98 backdrop-blur-md">
       <div className="container mx-auto px-4 pt-4 sm:pt-8 md:pt-16">
+
         {/* Search Header */}
-        <div className="flex items-center gap-2 sm:gap-4 mb-4 sm:mb-6 md:mb-8">
+        <div className="flex items-center gap-2 sm:gap-4 mb-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
             <Input
@@ -124,11 +184,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
               placeholder="Search movies, TV shows..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && query.trim()) {
-                  saveRecentSearch(query.trim());
-                }
-              }}
+              onKeyDown={(e) => { if (e.key === 'Enter' && query.trim()) saveRecentSearch(query.trim()); }}
               className="w-full pl-10 sm:pl-12 pr-4 py-4 sm:py-5 md:py-6 text-sm sm:text-base md:text-lg bg-secondary/80 border-border/50 focus-visible:ring-primary rounded-lg"
               autoFocus
             />
@@ -142,49 +198,165 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
             )}
           </div>
           <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={cn(
+              'p-2.5 sm:p-3 rounded-full transition-colors flex-shrink-0 relative border',
+              showFilters || hasActiveFilters
+                ? 'bg-primary border-primary text-white'
+                : 'hover:bg-secondary border-border/50 text-muted-foreground'
+            )}
+            aria-label="Toggle filters"
+          >
+            <SlidersHorizontal className="w-5 h-5 sm:w-6 sm:h-6" />
+            {hasActiveFilters && (
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full" />
+            )}
+          </button>
+          <button
             onClick={onClose}
-            className="p-2.5 sm:p-3 hover:bg-secondary rounded-full transition-colors flex-shrink-0"
+            className="p-2.5 sm:p-3 hover:bg-secondary rounded-full transition-colors flex-shrink-0 border border-border/50"
             aria-label="Close search"
           >
             <X className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
         </div>
 
+        {/* Filters Panel */}
+        {showFilters && (
+          <div className="mb-4 p-4 bg-secondary/50 border border-border/40 rounded-xl space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-white/70">Filter Results</span>
+              {hasActiveFilters && (
+                <button
+                  onClick={resetFilters}
+                  className="text-xs text-primary hover:text-primary/80 transition-colors"
+                >
+                  Reset all
+                </button>
+              )}
+            </div>
+
+            {/* Type */}
+            <div>
+              <p className="text-xs text-white/40 mb-2 uppercase tracking-wider">Type</p>
+              <div className="flex gap-2 flex-wrap">
+                {TYPE_OPTIONS.map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setTypeFilter(opt.value)}
+                    className={cn(
+                      'px-3 py-1.5 rounded-full text-sm border transition-all',
+                      typeFilter === opt.value
+                        ? 'bg-primary border-primary text-white'
+                        : 'bg-white/5 border-white/10 text-white/60 hover:text-white'
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Decade */}
+            <div>
+              <p className="text-xs text-white/40 mb-2 uppercase tracking-wider flex items-center gap-1">
+                <Calendar className="w-3 h-3" /> Era
+              </p>
+              <div className="flex gap-2 flex-wrap">
+                {DECADE_OPTIONS.map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setDecadeFilter(opt.value)}
+                    className={cn(
+                      'px-3 py-1.5 rounded-full text-sm border transition-all',
+                      decadeFilter === opt.value
+                        ? 'bg-primary border-primary text-white'
+                        : 'bg-white/5 border-white/10 text-white/60 hover:text-white'
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Rating */}
+            <div>
+              <p className="text-xs text-white/40 mb-2 uppercase tracking-wider flex items-center gap-1">
+                <Star className="w-3 h-3" /> Min Rating
+              </p>
+              <div className="flex gap-2 flex-wrap">
+                {RATING_OPTIONS.map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setRatingFilter(opt.value)}
+                    className={cn(
+                      'px-3 py-1.5 rounded-full text-sm border transition-all',
+                      ratingFilter === opt.value
+                        ? 'bg-primary border-primary text-white'
+                        : 'bg-white/5 border-white/10 text-white/60 hover:text-white'
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Results */}
-        <div className="max-h-[75vh] sm:max-h-[70vh] overflow-y-auto pb-8">
+        <div className="max-h-[65vh] sm:max-h-[60vh] overflow-y-auto pb-8">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             </div>
           ) : results.length > 0 ? (
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3 md:gap-4">
-              {results.map((item) => {
-                const title = item.title || item.name || 'Unknown';
-                const mediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
-                return (
-                  <Link
-                    key={item.id}
-                    href={`/${mediaType}/${item.id}`}
-                    onClick={handleResultClick}
-                    className="group"
-                  >
-                    <div className="relative aspect-[2/3] rounded-md overflow-hidden mb-1.5 sm:mb-2 bg-muted">
-                      <Image
-                        src={getImageUrl(item.poster_path, 'w300')}
-                        alt={title}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                    <h3 className="text-xs sm:text-sm font-medium truncate">{title}</h3>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground capitalize">{mediaType}</p>
-                  </Link>
-                );
-              })}
-            </div>
+            <>
+              <p className="text-xs text-white/30 mb-3">{results.length} results</p>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3 md:gap-4">
+                {results.map((item) => {
+                  const title = item.title || item.name || 'Unknown';
+                  const mediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
+                  const year = (item.release_date || item.first_air_date || '').slice(0, 4);
+                  const rating = item.vote_average ? item.vote_average.toFixed(1) : null;
+                  return (
+                    <Link
+                      key={item.id}
+                      href={`/${mediaType}/${item.id}`}
+                      onClick={handleResultClick}
+                      className="group"
+                    >
+                      <div className="relative aspect-[2/3] rounded-md overflow-hidden mb-1.5 sm:mb-2 bg-muted">
+                        <Image
+                          src={getImageUrl(item.poster_path, 'w300')}
+                          alt={title}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        {rating && (
+                          <div className="absolute top-1 right-1 bg-black/70 backdrop-blur-sm px-1.5 py-0.5 rounded text-xs font-bold text-yellow-400 flex items-center gap-0.5">
+                            ⭐ {rating}
+                          </div>
+                        )}
+                      </div>
+                      <h3 className="text-xs sm:text-sm font-medium truncate">{title}</h3>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground capitalize">
+                        {mediaType === 'tv' ? 'TV' : mediaType} {year ? `· ${year}` : ''}
+                      </p>
+                    </Link>
+                  );
+                })}
+              </div>
+            </>
           ) : query.trim() ? (
             <div className="text-center py-12">
               <p className="text-sm sm:text-base text-muted-foreground">No results found for &quot;{query}&quot;</p>
+              {hasActiveFilters && (
+                <button onClick={resetFilters} className="mt-3 text-sm text-primary hover:underline">
+                  Try removing filters
+                </button>
+              )}
             </div>
           ) : (
             <div className="space-y-6">

@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 import { Inter, Bebas_Neue } from 'next/font/google'
-import { Analytics } from '@vercel/analytics/next'
 import { ScrollToTop } from '@/components/scroll-to-top'
 import { WhatsAppPopup } from '@/components/whatsapp-popup'
+import { MobileBottomNav } from '@/components/mobile-bottom-nav'
 import './globals.css'
 
 const inter = Inter({ 
@@ -20,6 +20,12 @@ export const metadata: Metadata = {
   title: 'TechVyro - Watch Movies & TV Shows',
   description: 'Discover and stream the latest movies and TV shows. Your ultimate entertainment destination.',
   generator: 'v0.app',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'TechVyro',
+  },
   icons: {
     icon: [
       {
@@ -46,11 +52,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark" data-scroll-behavior="smooth" suppressHydrationWarning>
-      <body className={`${inter.variable} ${bebasNeue.variable} font-sans antialiased`} suppressHydrationWarning>
+      <body className={`${inter.variable} ${bebasNeue.variable} font-sans antialiased pb-16 md:pb-0`} suppressHydrationWarning>
         {children}
         <WhatsAppPopup />
         <ScrollToTop />
-        <Analytics />
+        <MobileBottomNav />
       </body>
     </html>
   )
