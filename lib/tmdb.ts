@@ -151,6 +151,41 @@ export async function getOnTheAirTV(): Promise<MovieResponse> {
   return fetchFromTMDB<MovieResponse>('/tv/on_the_air');
 }
 
+export async function getSimilarMovies(id: number): Promise<MovieResponse> {
+  return fetchFromTMDB<MovieResponse>(`/movie/${id}/similar`);
+}
+
+export async function getSimilarTV(id: number): Promise<MovieResponse> {
+  return fetchFromTMDB<MovieResponse>(`/tv/${id}/similar`);
+}
+
+export interface PersonDetails {
+  id: number;
+  name: string;
+  biography: string;
+  birthday: string | null;
+  deathday: string | null;
+  place_of_birth: string | null;
+  profile_path: string | null;
+  known_for_department: string;
+  popularity: number;
+  movie_credits?: {
+    cast: (Movie & { character: string; release_date: string })[];
+  };
+  tv_credits?: {
+    cast: (Movie & { character: string; first_air_date: string })[];
+  };
+  images?: {
+    profiles: { file_path: string }[];
+  };
+}
+
+export async function getPersonDetails(id: number): Promise<PersonDetails> {
+  return fetchFromTMDB<PersonDetails>(`/person/${id}`, {
+    append_to_response: 'movie_credits,tv_credits,images',
+  });
+}
+
 // TV show utilities
 
 export const GENRES: Genre[] = [

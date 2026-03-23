@@ -2,11 +2,20 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { Play, Plus, Check, Share2, Star } from 'lucide-react';
+import Link from 'next/link';
+import { Play, Plus, Check, Share2, Star, Film, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { VideoPlayer } from '@/components/video-player';
+import { TrailerModal } from '@/components/trailer-modal';
 import { getImageUrl } from '@/lib/tmdb';
 import { saveToWatchHistory } from '@/components/continue-watching';
+
+interface Video {
+  key: string;
+  site: string;
+  type: string;
+  name: string;
+}
 
 interface TVDetailClientProps {
   show: {
@@ -22,6 +31,7 @@ interface TVDetailClientProps {
     number_of_seasons?: number;
     seasons?: { season_number: number; episode_count: number }[];
     genres: { id: number; name: string }[];
+    videos?: { results: Video[] };
     credits?: {
       cast: {
         id: number;
@@ -38,9 +48,18 @@ interface TVDetailClientProps {
 
 export function TVDetailClient({ show }: TVDetailClientProps) {
   const [showPlayer, setShowPlayer] = useState(false);
+  const [showTrailer, setShowTrailer] = useState(false);
   const title = show.name || show.title || 'Unknown';
   
   const [inMyList, setInMyList] = useState(false);
+
+  const trailer = show.videos?.results?.find(
+    (v) => v.site === 'YouTube' && v.type === 'Trailer'
+  ) || show.videos?.results?.find(
+    (v) => v.site === 'YouTube' && v.type === 'Teaser'
+  ) || show.videos?.results?.find(
+    (v) => v.site === 'YouTube'
+  );
 
   const handleShare = async () => {
     const url = window.location.href;
@@ -55,7 +74,6 @@ export function TVDetailClient({ show }: TVDetailClientProps) {
     }
   };
 
-  // Check localStorage after mount to avoid hydration mismatch
   useEffect(() => {
     const list = JSON.parse(localStorage.getItem('myList') || '[]');
     const isInList = list.some((item: { id: number }) => item.id === show.id);
@@ -96,6 +114,14 @@ export function TVDetailClient({ show }: TVDetailClientProps) {
           totalSeasons={totalSeasons}
           episodesPerSeason={episodesPerSeason}
           onClose={() => setShowPlayer(false)}
+        />
+      )}
+
+      {showTrailer && trailer && (
+        <TrailerModal
+          videoKey={trailer.key}
+          title={title}
+          onClose={() => setShowTrailer(false)}
         />
       )}
 
@@ -151,6 +177,16 @@ export function TVDetailClient({ show }: TVDetailClientProps) {
                 <span className="px-2 py-1 border border-white/30 rounded text-[10px] md:text-xs bg-black/40 backdrop-blur-sm">
                   TV Series
                 </span>
+                {show.external_ids?.imdb_id && (
+                  <a
+                    href={`https://www.imdb.com/title/${show.external_ids.imdb_id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/40 px-2 py-1 rounded-full text-yellow-400 text-[10px] md:text-xs transition-colors"
+                  >
+                    IMDb <ExternalLink className="w-2.5 h-2.5" />
+                  </a>
+                )}
               </div>
 
               <div className="flex flex-wrap gap-1.5 md:gap-2 mb-3 md:mb-4">
@@ -188,6 +224,19 @@ export function TVDetailClient({ show }: TVDetailClientProps) {
                   <Play className="w-4 h-4 md:w-5 md:h-5 fill-current" />
                   Play
                 </Button>
+
+                {trailer && (
+                  <Button
+                    size="default"
+                    variant="secondary"
+                    className="gap-1.5 md:gap-2 bg-red-600/80 hover:bg-red-600 border-0 font-semibold text-xs sm:text-sm md:text-base px-4 md:px-6 text-white"
+                    onClick={() => setShowTrailer(true)}
+                  >
+                    <Film className="w-4 h-4 md:w-5 md:h-5" />
+                    Trailer
+                  </Button>
+                )}
+
                 <Button 
                   size="default"
                   variant="secondary" 
@@ -211,15 +260,15 @@ export function TVDetailClient({ show }: TVDetailClientProps) {
         <section className="container mx-auto px-4 py-6 md:py-12">
           <h2 className="text-lg md:text-2xl font-semibold mb-4 md:mb-6">Cast</h2>
           <div className="flex gap-3 md:gap-4 overflow-x-auto pb-4 scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
-            {show.credits.cast.slice(0, 12).map((actor) => (
-              <div key={actor.id} className="flex-shrink-0 w-20 sm:w-24 md:w-32">
-                <div className="relative w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 rounded-full overflow-hidden mb-2 bg-muted border-2 border-white/10">
+            {show.credits.cast.slice(0, 16).map((actor) => (
+              <Link key={actor.id} href={`/person/${actor.id}`} className="flex-shrink-0 w-20 sm:w-24 md:w-32 group">
+                <div className="relative w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 rounded-full overflow-hidden mb-2 bg-muted border-2 border-white/10 group-hover:border-white/40 transition-all">
                   {actor.profile_path ? (
                     <Image
                       src={getImageUrl(actor.profile_path, 'w200')}
                       alt={actor.name}
                       fill
-                      className="object-cover"
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-xl md:text-3xl text-muted-foreground bg-gradient-to-br from-muted to-muted/50">
@@ -227,9 +276,9 @@ export function TVDetailClient({ show }: TVDetailClientProps) {
                     </div>
                   )}
                 </div>
-                <h3 className="font-medium text-xs md:text-sm text-center truncate">{actor.name}</h3>
+                <h3 className="font-medium text-xs md:text-sm text-center truncate group-hover:text-white transition-colors">{actor.name}</h3>
                 <p className="text-[10px] md:text-xs text-muted-foreground text-center truncate">{actor.character}</p>
-              </div>
+              </Link>
             ))}
           </div>
         </section>

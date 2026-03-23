@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
-import { getMovieDetails, getPopularMovies, MovieResponse } from '@/lib/tmdb';
+import { getMovieDetails, getSimilarMovies, MovieResponse } from '@/lib/tmdb';
 import { MovieRow } from '@/components/movie-row';
 import { MovieDetailClient } from '@/components/movie-detail-client';
 
@@ -28,7 +28,7 @@ export default async function MoviePage({ params }: MoviePageProps) {
 
   let similar = emptyResponse;
   try {
-    similar = await getPopularMovies();
+    similar = await getSimilarMovies(movieId);
   } catch {
     // Continue with empty similar movies
   }
@@ -42,7 +42,7 @@ export default async function MoviePage({ params }: MoviePageProps) {
       {/* Similar Movies */}
       {similar.results.length > 0 && (
         <section className="py-8">
-          <MovieRow title="You Might Also Like" movies={similar.results} />
+          <MovieRow title="More Like This" movies={similar.results} />
         </section>
       )}
 

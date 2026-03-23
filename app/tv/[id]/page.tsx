@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
-import { getTVDetails, getPopularTVShows, MovieResponse } from '@/lib/tmdb';
+import { getTVDetails, getSimilarTV, MovieResponse } from '@/lib/tmdb';
 import { MovieRow } from '@/components/movie-row';
 import { TVDetailClient } from '@/components/tv-detail-client';
 
@@ -28,7 +28,7 @@ export default async function TVPage({ params }: TVPageProps) {
 
   let similar = emptyResponse;
   try {
-    similar = await getPopularTVShows();
+    similar = await getSimilarTV(tvId);
   } catch {
     // Continue with empty similar shows
   }
@@ -42,7 +42,7 @@ export default async function TVPage({ params }: TVPageProps) {
       {/* Similar Shows */}
       {similar.results.length > 0 && (
         <section className="py-8">
-          <MovieRow title="You Might Also Like" movies={similar.results} />
+          <MovieRow title="More Like This" movies={similar.results} />
         </section>
       )}
 
