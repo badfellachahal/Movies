@@ -7,6 +7,7 @@ import { Play, Plus, Check, Share2, Star, Film, ExternalLink } from 'lucide-reac
 import { Button } from '@/components/ui/button';
 import { VideoPlayer } from '@/components/video-player';
 import { TrailerModal } from '@/components/trailer-modal';
+import { EpisodeGuide } from '@/components/episode-guide';
 import { getImageUrl } from '@/lib/tmdb';
 import { saveToWatchHistory } from '@/components/continue-watching';
 
@@ -49,6 +50,8 @@ interface TVDetailClientProps {
 export function TVDetailClient({ show }: TVDetailClientProps) {
   const [showPlayer, setShowPlayer] = useState(false);
   const [showTrailer, setShowTrailer] = useState(false);
+  const [playerSeason, setPlayerSeason] = useState(1);
+  const [playerEpisode, setPlayerEpisode] = useState(1);
   const title = show.name || show.title || 'Unknown';
   
   const [inMyList, setInMyList] = useState(false);
@@ -111,6 +114,8 @@ export function TVDetailClient({ show }: TVDetailClientProps) {
           imdbId={show.external_ids?.imdb_id}
           type="tv"
           title={title}
+          season={playerSeason}
+          episode={playerEpisode}
           totalSeasons={totalSeasons}
           episodesPerSeason={episodesPerSeason}
           onClose={() => setShowPlayer(false)}
@@ -282,6 +287,32 @@ export function TVDetailClient({ show }: TVDetailClientProps) {
             ))}
           </div>
         </section>
+      )}
+
+      {/* Episode Guide */}
+      {show.seasons && show.seasons.filter(s => s.season_number > 0).length > 0 && (
+        <EpisodeGuide
+          tvId={show.id}
+          seasons={show.seasons.map(s => ({
+            season_number: s.season_number,
+            episode_count: s.episode_count,
+            name: `Season ${s.season_number}`,
+          }))}
+          onPlayEpisode={(season, episode) => {
+            setPlayerSeason(season);
+            setPlayerEpisode(episode);
+            saveToWatchHistory({
+              id: show.id,
+              title,
+              poster_path: show.poster_path,
+              backdrop_path: show.backdrop_path,
+              media_type: 'tv',
+              season,
+              episode,
+            });
+            setShowPlayer(true);
+          }}
+        />
       )}
     </>
   );

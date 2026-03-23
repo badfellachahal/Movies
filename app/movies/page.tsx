@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
 import { GenreFilter } from '@/components/genre-filter';
+import { LanguageFilter } from '@/components/language-filter';
 import {
   getPopularMovies,
   getTopRatedMovies,
@@ -103,6 +104,7 @@ export default async function MoviesPage() {
         ) : (
           <div className="space-y-0 md:space-y-1">
             <GenreFilter genres={MOVIE_GENRES} initialRows={initialRows} type="movie" />
+            <LanguageFilter type="movie" />
           </div>
         )}
       </div>

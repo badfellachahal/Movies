@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
 import { GenreFilter } from '@/components/genre-filter';
+import { LanguageFilter } from '@/components/language-filter';
 import {
   getPopularTVShows,
   getTopRatedTVShows,
@@ -111,6 +112,7 @@ export default async function TVShowsPage() {
         ) : (
           <div className="space-y-0 md:space-y-1">
             <GenreFilter genres={TV_GENRES} initialRows={initialRows} type="tv" />
+            <LanguageFilter type="tv" />
           </div>
         )}
       </div>

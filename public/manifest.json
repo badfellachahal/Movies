@@ -1,0 +1,42 @@
+{
+  "name": "TechVyro",
+  "short_name": "TechVyro",
+  "description": "Discover and stream the latest movies and TV shows.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#e50914",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-dark-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["entertainment"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Movies",
+      "url": "/movies",
+      "description": "Browse all movies"
+    },
+    {
+      "name": "TV Shows",
+      "url": "/tv-shows",
+      "description": "Browse all TV shows"
+    },
+    {
+      "name": "My List",
+      "url": "/my-list",
+      "description": "Your saved watchlist"
+    }
+  ]
+}

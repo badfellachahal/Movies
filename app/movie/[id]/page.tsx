@@ -1,9 +1,11 @@
 import { notFound } from 'next/navigation';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
-import { getMovieDetails, getSimilarMovies, MovieResponse } from '@/lib/tmdb';
+import { getMovieDetails, getSimilarMovies, getMovieReviews, MovieResponse } from '@/lib/tmdb';
 import { MovieRow } from '@/components/movie-row';
 import { MovieDetailClient } from '@/components/movie-detail-client';
+import { ReviewsSection } from '@/components/reviews-section';
+import { UserRating } from '@/components/user-rating';
 
 interface MoviePageProps {
   params: Promise<{ id: string }>;
@@ -26,12 +28,13 @@ export default async function MoviePage({ params }: MoviePageProps) {
     notFound();
   }
 
-  let similar = emptyResponse;
-  try {
-    similar = await getSimilarMovies(movieId);
-  } catch {
-    // Continue with empty similar movies
-  }
+  const [similar, reviews] = await Promise.allSettled([
+    getSimilarMovies(movieId),
+    getMovieReviews(movieId),
+  ]);
+
+  const similarMovies = similar.status === 'fulfilled' ? similar.value : emptyResponse;
+  const movieReviews = reviews.status === 'fulfilled' ? reviews.value.results : [];
 
   return (
     <main className="min-h-screen bg-background" suppressHydrationWarning>
@@ -39,10 +42,14 @@ export default async function MoviePage({ params }: MoviePageProps) {
       
       <MovieDetailClient movie={movie} />
 
+      <UserRating mediaId={movie.id} mediaType="movie" title={movie.title} />
+
+      <ReviewsSection reviews={movieReviews} />
+
       {/* Similar Movies */}
-      {similar.results.length > 0 && (
+      {similarMovies.results.length > 0 && (
         <section className="py-8">
-          <MovieRow title="More Like This" movies={similar.results} />
+          <MovieRow title="More Like This" movies={similarMovies.results} />
         </section>
       )}
 

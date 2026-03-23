@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Movie } from '@/lib/tmdb';
 import { MovieRow } from './movie-row';
+import { MovieCard } from './movie-card';
 
 interface Genre {
   id: number;
@@ -26,6 +27,9 @@ export function GenreFilter({ genres, initialRows, type }: GenreFilterProps) {
   const [activeGenre, setActiveGenre] = useState<number | null>(null);
   const [filteredMovies, setFilteredMovies] = useState<Movie[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const pillsRef = useRef<HTMLDivElement>(null);
 
   const scrollPills = (dir: 'left' | 'right') => {
@@ -35,15 +39,18 @@ export function GenreFilter({ genres, initialRows, type }: GenreFilterProps) {
 
   const handleGenreSelect = async (genreId: number | null) => {
     setActiveGenre(genreId);
+    setCurrentPage(1);
+    setTotalPages(1);
     if (genreId === null) {
       setFilteredMovies([]);
       return;
     }
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/genre?genreId=${genreId}&type=${type}`);
+      const res = await fetch(`/api/genre?genreId=${genreId}&type=${type}&page=1`);
       const data = await res.json();
       setFilteredMovies(data.results || []);
+      setTotalPages(data.total_pages || 1);
     } catch {
       setFilteredMovies([]);
     } finally {
@@ -51,7 +58,25 @@ export function GenreFilter({ genres, initialRows, type }: GenreFilterProps) {
     }
   };
 
+  const handleLoadMore = async () => {
+    if (!activeGenre || isLoadingMore) return;
+    const nextPage = currentPage + 1;
+    setIsLoadingMore(true);
+    try {
+      const res = await fetch(`/api/genre?genreId=${activeGenre}&type=${type}&page=${nextPage}`);
+      const data = await res.json();
+      setFilteredMovies(prev => [...prev, ...(data.results || [])]);
+      setCurrentPage(nextPage);
+      setTotalPages(data.total_pages || totalPages);
+    } catch {
+      // ignore
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
+
   const activeGenreName = genres.find(g => g.id === activeGenre)?.name;
+  const hasMore = activeGenre !== null && currentPage < Math.min(totalPages, 10);
 
   return (
     <div>
@@ -110,10 +135,35 @@ export function GenreFilter({ genres, initialRows, type }: GenreFilterProps) {
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
           ) : filteredMovies.length > 0 ? (
-            <MovieRow
-              title={activeGenreName ?? 'Results'}
-              movies={filteredMovies}
-            />
+            <>
+              <div className="px-4 md:px-8 mb-4">
+                <h2 className="text-lg md:text-xl font-semibold">
+                  {activeGenreName}
+                  <span className="text-white/40 text-sm font-normal ml-2">{filteredMovies.length} titles</span>
+                </h2>
+              </div>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2 md:gap-3 px-4 md:px-8">
+                {filteredMovies.map((movie, i) => (
+                  <MovieCard key={`${movie.id}-${i}`} movie={{ ...movie, media_type: movie.media_type || type }} />
+                ))}
+              </div>
+              {hasMore && (
+                <div className="flex justify-center mt-8 pb-4">
+                  <button
+                    onClick={handleLoadMore}
+                    disabled={isLoadingMore}
+                    className="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 px-6 py-2.5 rounded-full text-sm font-medium transition-all disabled:opacity-50"
+                  >
+                    {isLoadingMore ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4" />
+                    )}
+                    {isLoadingMore ? 'Loading...' : 'Load More'}
+                  </button>
+                </div>
+              )}
+            </>
           ) : (
             <div className="flex items-center justify-center py-24 text-muted-foreground">
               No results found for this genre.

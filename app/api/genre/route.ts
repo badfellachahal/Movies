@@ -8,14 +8,24 @@ export async function GET(request: NextRequest) {
   const genreId = searchParams.get('genreId');
   const type = searchParams.get('type') || 'movie';
   const page = searchParams.get('page') || '1';
+  const language = searchParams.get('language');
 
   if (!TMDB_API_KEY) {
     return NextResponse.json({ results: [], error: 'API key not configured' });
   }
 
   try {
-    const url = genreId
-      ? `${TMDB_BASE_URL}/discover/${type}?api_key=${TMDB_API_KEY}&with_genres=${genreId}&page=${page}&sort_by=popularity.desc`
+    const params = new URLSearchParams({
+      api_key: TMDB_API_KEY,
+      page,
+      sort_by: 'popularity.desc',
+    });
+
+    if (genreId) params.set('with_genres', genreId);
+    if (language) params.set('with_original_language', language);
+
+    const url = (genreId || language)
+      ? `${TMDB_BASE_URL}/discover/${type}?${params}`
       : `${TMDB_BASE_URL}/${type}/popular?api_key=${TMDB_API_KEY}&page=${page}`;
 
     const response = await fetch(url, { next: { revalidate: 3600 } });

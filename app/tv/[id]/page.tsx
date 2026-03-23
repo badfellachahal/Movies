@@ -1,9 +1,11 @@
 import { notFound } from 'next/navigation';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
-import { getTVDetails, getSimilarTV, MovieResponse } from '@/lib/tmdb';
+import { getTVDetails, getSimilarTV, getTVReviews, MovieResponse } from '@/lib/tmdb';
 import { MovieRow } from '@/components/movie-row';
 import { TVDetailClient } from '@/components/tv-detail-client';
+import { ReviewsSection } from '@/components/reviews-section';
+import { UserRating } from '@/components/user-rating';
 
 interface TVPageProps {
   params: Promise<{ id: string }>;
@@ -26,12 +28,13 @@ export default async function TVPage({ params }: TVPageProps) {
     notFound();
   }
 
-  let similar = emptyResponse;
-  try {
-    similar = await getSimilarTV(tvId);
-  } catch {
-    // Continue with empty similar shows
-  }
+  const [similar, reviews] = await Promise.allSettled([
+    getSimilarTV(tvId),
+    getTVReviews(tvId),
+  ]);
+
+  const similarShows = similar.status === 'fulfilled' ? similar.value : emptyResponse;
+  const showReviews = reviews.status === 'fulfilled' ? reviews.value.results : [];
 
   return (
     <main className="min-h-screen bg-background" suppressHydrationWarning>
@@ -39,10 +42,14 @@ export default async function TVPage({ params }: TVPageProps) {
       
       <TVDetailClient show={show} />
 
+      <UserRating mediaId={show.id} mediaType="tv" title={show.name || show.title || ''} />
+
+      <ReviewsSection reviews={showReviews} />
+
       {/* Similar Shows */}
-      {similar.results.length > 0 && (
+      {similarShows.results.length > 0 && (
         <section className="py-8">
-          <MovieRow title="More Like This" movies={similar.results} />
+          <MovieRow title="More Like This" movies={similarShows.results} />
         </section>
       )}
 

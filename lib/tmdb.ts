@@ -186,6 +186,70 @@ export async function getPersonDetails(id: number): Promise<PersonDetails> {
   });
 }
 
+export interface Episode {
+  id: number;
+  name: string;
+  overview: string;
+  episode_number: number;
+  season_number: number;
+  air_date: string | null;
+  runtime: number | null;
+  still_path: string | null;
+  vote_average: number;
+}
+
+export interface SeasonDetails {
+  id: number;
+  name: string;
+  season_number: number;
+  episode_count: number;
+  episodes: Episode[];
+}
+
+export async function getSeasonDetails(tvId: number, seasonNumber: number): Promise<SeasonDetails> {
+  return fetchFromTMDB<SeasonDetails>(`/tv/${tvId}/season/${seasonNumber}`);
+}
+
+export interface Review {
+  id: string;
+  author: string;
+  author_details: {
+    name: string;
+    username: string;
+    avatar_path: string | null;
+    rating: number | null;
+  };
+  content: string;
+  created_at: string;
+  url: string;
+}
+
+export interface ReviewsResponse {
+  results: Review[];
+  total_results: number;
+}
+
+export async function getMovieReviews(id: number): Promise<ReviewsResponse> {
+  return fetchFromTMDB<ReviewsResponse>(`/movie/${id}/reviews`);
+}
+
+export async function getTVReviews(id: number): Promise<ReviewsResponse> {
+  return fetchFromTMDB<ReviewsResponse>(`/tv/${id}/reviews`);
+}
+
+export interface Collection {
+  id: number;
+  name: string;
+  overview: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  parts: Movie[];
+}
+
+export async function getCollection(id: number): Promise<Collection> {
+  return fetchFromTMDB<Collection>(`/collection/${id}`);
+}
+
 // TV show utilities
 
 export const GENRES: Genre[] = [
